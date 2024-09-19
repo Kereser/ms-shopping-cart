@@ -53,8 +53,8 @@ public class CartUseCase implements ICartServicePort {
 
     private void handleUpdateCart(Cart cartReq, Cart dbCart) {
         Set<CartItem> tentativeItems = getAllNewPossibleItemsOnCart(cartReq.getCartItems(), dbCart.getCartItems());
-        stockFeignPort.handleAdditionToCart(mapper.cartItemsToItemsReqDTO(tentativeItems));
 
+        stockFeignPort.handleAdditionToCart(mapper.cartItemsToItemsReqDTO(tentativeItems));
         dbCart.addItems(tentativeItems);
 
         save(dbCart);
@@ -69,21 +69,37 @@ public class CartUseCase implements ICartServicePort {
     }
 
     private Set<CartItem> getAllNewPossibleItemsOnCart(Set<CartItem> toAdd, Set<CartItem> actual) {
-        Map<Long, Long> toAddMap = toAdd.stream().collect(Collectors.toMap(CartItem::getArticleId, CartItem::getQuantity));
-        Map<Long, CartItem> actualItemsMap = actual.stream().collect(Collectors.toMap(CartItem::getArticleId, item -> item));
+        Map<Long, Long> toAddMap = mapItemsToQuantity(toAdd);
+        Map<Long, CartItem> actualItemsMap = mapItemsToCartItems(actual);
 
+        updateCartItemsWithNewQuantities(toAddMap, actualItemsMap);
+
+        return new HashSet<>(actualItemsMap.values());
+    }
+
+    private Map<Long, Long> mapItemsToQuantity(Set<CartItem> items) {
+        return items.stream().collect(Collectors.toMap(CartItem::getArticleId, CartItem::getQuantity));
+    }
+
+    private Map<Long, CartItem> mapItemsToCartItems(Set<CartItem> items) {
+        return items.stream().collect(Collectors.toMap(CartItem::getArticleId, item -> item));
+    }
+
+    private void updateCartItemsWithNewQuantities(Map<Long, Long> toAddMap, Map<Long, CartItem> actualItemsMap) {
         toAddMap.forEach((id, quantity) -> {
             CartItem ci = actualItemsMap.get(id);
             if (ci != null) {
                 ci.setQuantity(quantity + ci.getQuantity());
             } else {
-                CartItem newCartItem = new CartItem();
-                newCartItem.setArticleId(id);
-                newCartItem.setQuantity(quantity);
-                actualItemsMap.put(id, newCartItem);
+                actualItemsMap.put(id, createNewCartItem(id, quantity));
             }
         });
+    }
 
-        return new HashSet<>(actualItemsMap.values());
+    private CartItem createNewCartItem(Long articleId, Long quantity) {
+        CartItem newCartItem = new CartItem();
+        newCartItem.setArticleId(articleId);
+        newCartItem.setQuantity(quantity);
+        return newCartItem;
     }
 }
