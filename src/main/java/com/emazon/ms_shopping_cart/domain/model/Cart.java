@@ -1,31 +1,26 @@
 package com.emazon.ms_shopping_cart.domain.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Cart {
 
     private Long id;
-
-    private Long articleId;
-
     private Long userId;
-
-    private Long quantity;
-
-    private LocalDate updatedAt;
-
-    private LocalDate createdAt;
+    private Set<CartItem> cartItems = new HashSet<>();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Cart() {
     }
 
-    public Cart(Long id, Long articleId, Long userId, Long quantity, LocalDate updatedAt, LocalDate createdAt) {
+    public Cart(Long id, Long userId, Set<CartItem> cartItems, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.articleId = articleId;
         this.userId = userId;
-        this.quantity = quantity;
-        this.updatedAt = updatedAt;
+        this.cartItems = cartItems;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -36,14 +31,6 @@ public class Cart {
         this.id = id;
     }
 
-    public Long getArticleId() {
-        return articleId;
-    }
-
-    public void setArticleId(Long articleId) {
-        this.articleId = articleId;
-    }
-
     public Long getUserId() {
         return userId;
     }
@@ -52,27 +39,31 @@ public class Cart {
         this.userId = userId;
     }
 
-    public Long getQuantity() {
-        return quantity;
+    public void setCartItems(Set<CartItem> cartItems) {
+        this.cartItems = cartItems;
     }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
+    public Set<CartItem> getCartItems() {
+        return cartItems;
     }
 
-    public LocalDate getUpdatedAt() {
-        return updatedAt;
+    public void addItems(Set<CartItem> cartItems) {
+        this.cartItems.addAll(cartItems);
     }
 
-    public void setUpdatedAt(LocalDate updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public LocalDate getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDate createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

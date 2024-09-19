@@ -1,14 +1,18 @@
 package com.emazon.ms_shopping_cart.infra.exceptionhandler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExceptionResponse {
     public static final String NOT_NULL = "must not be null";
     public static final String NOT_BLANK = "must not be blank";
@@ -26,6 +30,8 @@ public class ExceptionResponse {
     public static final String INVALID_TOKEN = "Invalid token.";
     public static final String INVALID_CREDENTIALS = "Invalid credentials.";
     public static final String BIRTH_DAY_CONSTRAINS = "Birth day doesn't meet the constrains.";
+
+    public static final String ERROR_PROCESSING_OPERATION = "Error processing operation with: ";
 
     public static final String USER_MUST_BE_OLDER = "User must be older.";
     public static final String EMAIL_MUST_BE_UNIQUE = "Email must be unique.";
