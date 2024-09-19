@@ -51,46 +51,37 @@ class CartControllerIntegrationTest {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private static final String USER = "testUser";
-    private static final String AUX_DEPOT = "AUX_DEPOT";
-    private static final String CLIENT = "CLIENT";
-    private static final Long USER_ID = 1L;
-    private static final Long ARTICLE_ID = 1L;
-    private static final String PASSWORD = "password";
-    private static final String AUTHORIZATION = "Authorization";
-    private static final String BEARER = "Bearer ";
-
-    private static final Set<CartItemDTO> cartItemsDTO = Set.of(CartItemDTO.builder().articleId(ARTICLE_ID).quantity(ConsUtils.LONG_1).build());
+    private static final Set<CartItemDTO> cartItemsDTO = Set.of(CartItemDTO.builder().articleId(ConsUtils.LONG_1).quantity(ConsUtils.LONG_1).build());
     private static final ItemsReqDTO itemsReqDTO = ItemsReqDTO.builder()
             .items(new HashSet<>(cartItemsDTO))
             .build();
 
     @Test
     void Should_ThrowsException_When_NotAuthorized() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID))
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void Should_ThrowsException_When_NotValidRole() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
-                        .header(AUTHORIZATION, BEARER + getAuxDepotToken()))
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getAuxDepotToken()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void Should_ThrowsException_When_NotValidToken() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
-                        .header(AUTHORIZATION, BEARER + BEARER))
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + ConsUtils.BEARER))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void Should_ThrowsException_When_NotAvailableConnectionToStock() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isInternalServerError());
     }
 
@@ -99,10 +90,10 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignBadRequest())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -111,7 +102,7 @@ class CartControllerIntegrationTest {
         mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_2)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isForbidden());
     }
 
@@ -120,10 +111,10 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignConflicted())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isConflict());
     }
 
@@ -132,10 +123,10 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignForbidden())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isForbidden());
     }
 
@@ -144,10 +135,10 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignForbidden())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getAuxDepotToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getAuxDepotToken()))
                 .andExpect(status().isForbidden());
     }
 
@@ -179,20 +170,27 @@ class CartControllerIntegrationTest {
     private void saveValidCart() throws Exception {
         Mockito.doNothing().when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), USER_ID)
+        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(AUTHORIZATION, BEARER + getClientToken()))
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isCreated());
     }
 
     private String getAuxDepotToken() {
-        CustomUserDetails userDetail = new CustomUserDetails(USER, PASSWORD, Set.of(new SimpleGrantedAuthority("ROLE_".concat(AUX_DEPOT))), USER_ID);
+        CustomUserDetails userDetail = new CustomUserDetails(ConsUtils.USERNAME,
+                ConsUtils.PASSWORD,
+                Set.of(new SimpleGrantedAuthority(ConsUtils.ROLE.concat(ConsUtils.AUX_DEPOT))),
+                ConsUtils.LONG_1);
+
         return JwtUtils.createToken(new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities()));
     }
 
     private String getClientToken() {
-        CustomUserDetails userDetail = new CustomUserDetails(USER, PASSWORD, Set.of(new SimpleGrantedAuthority("ROLE_".concat(CLIENT))), USER_ID);
+        CustomUserDetails userDetail = new CustomUserDetails(ConsUtils.USERNAME,
+                ConsUtils.PASSWORD,
+                Set.of(new SimpleGrantedAuthority("ROLE_".concat(ConsUtils.CLIENT))),
+                ConsUtils.LONG_1);
         return JwtUtils.createToken(new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities()));
     }
 

@@ -17,7 +17,7 @@ public class FeignConfig {
 
     @Bean
     public RequestInterceptor requestInterceptor() {
-        return template -> template.header(ConsUtils.AUTHORIZATION_HEADER, getTokenFromAuth());
+        return template -> template.header(ConsUtils.AUTHORIZATION, getTokenFromAuth());
     }
 
     private String getTokenFromAuth() {

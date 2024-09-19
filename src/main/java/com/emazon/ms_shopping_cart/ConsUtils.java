@@ -10,6 +10,7 @@ public class ConsUtils {
 
     public static final String CLIENT = "CLIENT";
     public static final String ADMIN = "ADMIN";
+    public static final String AUX_DEPOT = "AUX_DEPOT";
 
     public static final String USER_ID = "userId";
     public static final String USERNAME = "USERNAME";
@@ -23,9 +24,8 @@ public class ConsUtils {
 
     public static final String AUTHORITIES = "authorities";
 
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String AUTHORIZATION = "Authorization";
     public static final String BEARER = "Bearer ";
-    public static final String EMPTY = "";
 
     public static final String FIELD_MESSAGE = "$.message";
     public static final String FIELD_ITEMS = "$.fieldErrors.items";
