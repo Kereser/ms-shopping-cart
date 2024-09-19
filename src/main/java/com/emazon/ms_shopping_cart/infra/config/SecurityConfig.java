@@ -1,5 +1,7 @@
 package com.emazon.ms_shopping_cart.infra.config;
 
+import com.emazon.ms_shopping_cart.ConsUtils;
+import com.emazon.ms_shopping_cart.infra.security.entrypoint.CustomBasicAuthenticationEntryPoint;
 import com.emazon.ms_shopping_cart.infra.security.entrypoint.CustomJWTEntryPoint;
 import com.emazon.ms_shopping_cart.infra.security.filter.JwtValidatorFilter;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +22,16 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private final CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomJWTEntryPoint jwtEntryPoint) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
+            .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(authenticationEntryPoint))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(HttpMethod.PUT, "/cart").hasRole("CLIENT");
+                auth.requestMatchers(HttpMethod.PUT, "/cart/**").hasRole(ConsUtils.CLIENT);
 
                 auth.anyRequest().denyAll();
             });
