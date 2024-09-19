@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "cart")
 @Getter
@@ -21,16 +23,23 @@ public class CartEntity {
     private Long id;
 
     @Column(nullable = ConsUtils.FALSE)
-    private Long articleId;
-
-    @Column(nullable = ConsUtils.FALSE)
     private Long userId;
 
     @Column(nullable = ConsUtils.FALSE)
-    private Long quantity;
+    @OneToMany(mappedBy = "cart", orphanRemoval = true, cascade = CascadeType.ALL)
+    @Builder.Default
+    private Set<CartItemEntity> cartItems = new HashSet<>();
 
-    private LocalDate updatedAt;
+    @Column(nullable = ConsUtils.FALSE, updatable = false)
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = ConsUtils.FALSE)
-    private LocalDate createdAt;
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public void addCartItems(Set<CartItemEntity> cartItems) {
+        this.cartItems.addAll(cartItems);
+        cartItems.forEach(ci -> ci.setCart(this));
+    }
 }
