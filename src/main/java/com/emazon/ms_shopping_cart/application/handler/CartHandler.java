@@ -19,12 +19,16 @@ public class CartHandler implements ICartHandler {
     private final CartDTOMapper mapper;
 
     @Override
-    public void handleAddOperation(Long userId, Set<CartItemDTO> setDTO) {
+    public void handleAddOperation(Set<CartItemDTO> cartItemDTOS) {
         Cart cart = new Cart();
 
-        cart.setUserId(userId);
-        cart.addItems(mapper.cartItemsReqToCartItems(setDTO));
+        cart.addItems(mapper.cartItemsReqToCartItems(cartItemDTOS));
 
         cartServicePort.handleAddOperation(cart);
+    }
+
+    @Override
+    public void handleDeletionFromCart(Long cartId, Long articleId) {
+        cartServicePort.deleteArticleFromCart(cartId, articleId);
     }
 }

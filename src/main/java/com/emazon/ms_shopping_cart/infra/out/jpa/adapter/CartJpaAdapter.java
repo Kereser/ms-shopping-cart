@@ -34,7 +34,7 @@ public class CartJpaAdapter implements ICartPersistencePort {
     }
 
     @Override
-    public CustomUserDetails getSecurityContext() {
+    public CustomUserDetails getSecurityPrincipal() {
         return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }
