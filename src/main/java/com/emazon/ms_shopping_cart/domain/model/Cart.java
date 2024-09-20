@@ -51,6 +51,10 @@ public class Cart {
         this.cartItems.addAll(cartItems);
     }
 
+    public void deleteItems(Set<CartItem> cartItems) {
+        this.cartItems.removeAll(cartItems);
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
