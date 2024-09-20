@@ -3,6 +3,7 @@ package com.emazon.ms_shopping_cart.infra.input.rest;
 import com.emazon.ms_shopping_cart.ConsUtils;
 import com.emazon.ms_shopping_cart.application.dto.CartItemDTO;
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
+import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
 import com.emazon.ms_shopping_cart.infra.exceptionhandler.ExceptionResponse;
 import com.emazon.ms_shopping_cart.infra.out.jpa.entity.CartEntity;
@@ -32,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -58,27 +61,27 @@ class CartControllerIntegrationTest {
 
     @Test
     void Should_ThrowsException_When_NotAuthorized() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1))
+        mockMvc.perform(put(ConsUtils.builderPath().build()))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void Should_ThrowsException_When_NotValidRole() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getAuxDepotToken()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void Should_ThrowsException_When_NotValidToken() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build(), ConsUtils.LONG_1)
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + ConsUtils.BEARER))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void Should_ThrowsException_When_NotAvailableConnectionToStock() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
@@ -90,7 +93,7 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignBadRequest())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
@@ -98,20 +101,11 @@ class CartControllerIntegrationTest {
     }
 
     @Test
-    void Should_ThrowsException_When_ResourceOwnershipViolation() throws Exception {
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_2)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
-                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     void Should_ThrowsException_When_NotSufficientStock() throws Exception {
         Mockito.doThrow(getFeignConflicted())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
@@ -123,7 +117,7 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignForbidden())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
@@ -135,7 +129,7 @@ class CartControllerIntegrationTest {
         Mockito.doThrow(getFeignForbidden())
                 .when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getAuxDepotToken()))
@@ -167,10 +161,48 @@ class CartControllerIntegrationTest {
         Assertions.assertEquals(ConsUtils.LONG_2, cartEntityList.get(0).getCartItems().size());
     }
 
+    /*** Delete item from cart ***/
+    @Test
+    void Should_ThrowsException_When_CartIdNotFound() throws Exception {
+        mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_1)
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
+                .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.ERROR_PROCESSING_OPERATION + Cart.class.getSimpleName()))
+                .andExpect(jsonPath(ConsUtils.FIELD_ERRORS_ID).value(ExceptionResponse.ID_NOT_FOUND))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void Should_ThrowsException_When_ArticleIdNotFound() throws Exception {
+        saveValidCart();
+
+        List<CartEntity> cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
+        Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
+        Assertions.assertEquals(ConsUtils.LONG_1, cartEntityList.get(ConsUtils.INTEGER_0).getCartItems().stream().findFirst().map(CartItemEntity::getArticleId).orElse(ConsUtils.LONG_0));
+
+        mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_2)
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
+                .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.ERROR_PROCESSING_OPERATION + ConsUtils.ARTICLE_ENTITY))
+                .andExpect(jsonPath(ConsUtils.FIELD_ERRORS_ID).value(ExceptionResponse.ID_NOT_FOUND))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void Should_DeleteItemFromCart_When_ValidData() throws Exception {
+        saveValidCart();
+
+        mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_1)
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
+                .andExpect(status().isOk());
+
+        List<CartEntity> cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
+        Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
+        Assertions.assertEquals(ConsUtils.LONG_0, cartEntityList.get(ConsUtils.INTEGER_0).getCartItems().size());
+    }
+
     private void saveValidCart() throws Exception {
         Mockito.doNothing().when(stockFeignPort).handleAdditionToCart(Mockito.any());
 
-        mockMvc.perform(put(ConsUtils.builderPath().withUserId().build(), ConsUtils.LONG_1)
+        mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(itemsReqDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
@@ -196,21 +228,21 @@ class CartControllerIntegrationTest {
 
     private FeignException.BadRequest getFeignBadRequest() throws JsonProcessingException {
         return new FeignException.BadRequest(null,
-                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().withUserId().build(), Map.of(), null, null, null),
+                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().build(), Map.of(), null, null, null),
                 mapper.writeValueAsBytes(ExceptionResponse.builder().build()),
                 null);
     }
 
     private FeignException.Conflict getFeignConflicted() throws JsonProcessingException {
         return new FeignException.Conflict(null,
-                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().withUserId().build(), Map.of(), null, null, null),
+                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().build(), Map.of(), null, null, null),
                 mapper.writeValueAsBytes(ExceptionResponse.builder().build()),
                 null);
     }
 
     private FeignException.Forbidden getFeignForbidden() throws JsonProcessingException {
         return new FeignException.Forbidden(null,
-                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().withUserId().build(), Map.of(), null, null, null),
+                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().build(), Map.of(), null, null, null),
                 mapper.writeValueAsBytes(ExceptionResponse.builder().build()),
                 null);
     }
