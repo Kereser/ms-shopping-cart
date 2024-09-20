@@ -31,7 +31,8 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(authenticationEntryPoint))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(HttpMethod.PUT, "/cart/**").hasRole(ConsUtils.CLIENT);
+                auth.requestMatchers(HttpMethod.PUT, ConsUtils.builderPath().build()).hasRole(ConsUtils.CLIENT);
+                auth.requestMatchers(HttpMethod.DELETE, ConsUtils.builderPath().withCartId().withArticles().withArticleId().build()).hasRole(ConsUtils.CLIENT);
 
                 auth.anyRequest().denyAll();
             });
