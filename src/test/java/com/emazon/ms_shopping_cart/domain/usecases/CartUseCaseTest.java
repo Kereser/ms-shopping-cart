@@ -53,7 +53,7 @@ class CartUseCaseTest {
         Mockito.doReturn(USER_DETAILS_ID_1).when(cartPersistencePort).getSecurityPrincipal();
         cartUseCase.handleAddOperation(CART);
 
-        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_2)).getSecurityPrincipal();
+        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_1)).getSecurityPrincipal();
         Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_1)).findByUserId(CART.getUserId());
     }
 
@@ -64,7 +64,7 @@ class CartUseCaseTest {
 
         cartUseCase.handleAddOperation(CART_WITH_2_ITEMS);
 
-        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_2)).getSecurityPrincipal();
+        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_1)).getSecurityPrincipal();
         Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_1)).findByUserId(CART.getUserId());
     }
 
