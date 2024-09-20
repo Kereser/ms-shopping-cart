@@ -1,7 +1,7 @@
 package com.emazon.ms_shopping_cart.infra.exceptionhandler;
 
 import com.emazon.ms_shopping_cart.infra.exception.BaseEntityException;
-import com.emazon.ms_shopping_cart.infra.exception.ResourceOwnershipViolationException;
+import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
@@ -28,12 +28,6 @@ public class ControllerAdvisor {
                 .body(ExceptionResponse.builder().message(ex.getMessage().split(":")[0]).build());
     }
 
-    @ExceptionHandler(ResourceOwnershipViolationException.class)
-    public ResponseEntity<ExceptionResponse> handleBadRequestOnConstrains(BaseEntityException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ExceptionResponse.builder().message(ex.getReason()).build());
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleFieldValidations(MethodArgumentNotValidException ex) {
         Map<String, Object> fieldErrors = new HashMap<>();
@@ -45,6 +39,18 @@ public class ControllerAdvisor {
                 .fieldErrors(fieldErrors)
                 .build();
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    @ExceptionHandler(NoDataFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleNoDataFound(BaseEntityException ex) {
+        Map<String, Object> errors = new HashMap<>();
+        errors.put(ex.getField(), ExceptionResponse.ID_NOT_FOUND);
+
+        ExceptionResponse res = ExceptionResponse.builder()
+                .message(ExceptionResponse.ERROR_PROCESSING_OPERATION + ex.getEntityName())
+                .fieldErrors(errors)
+                .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
