@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.ConnectException;
 import java.util.HashMap;
@@ -51,7 +52,14 @@ public class ControllerAdvisor {
                 .message(ExceptionResponse.ERROR_PROCESSING_OPERATION + ex.getEntityName())
                 .fieldErrors(errors)
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ExceptionResponse> handleNotValidReqParam(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ExceptionResponse.builder()
+                .message(ExceptionResponse.NOT_VALID_PARAM)
+                .fieldErrors(Map.of(ex.getName(), ex.getValue() != null ? ex.getValue() : "")).build());
     }
 
     @ExceptionHandler(FeignException.BadRequest.class)
@@ -69,6 +77,12 @@ public class ControllerAdvisor {
     @ExceptionHandler(FeignException.Forbidden.class)
     public ResponseEntity<ExceptionResponse> handleFeignBadRequest(FeignException.Forbidden ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @ExceptionHandler(FeignException.InternalServerError.class)
+    public ResponseEntity<ExceptionResponse> handleFeignInternalError(FeignException.InternalServerError ex) throws JsonProcessingException {
+        ExceptionResponse res = mapper.readValue(ex.contentUTF8(), ExceptionResponse.class);
+        return ResponseEntity.internalServerError().body(res);
     }
 
     @ExceptionHandler({ConnectException.class, RetryableException.class})
