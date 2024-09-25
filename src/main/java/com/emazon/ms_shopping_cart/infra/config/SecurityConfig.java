@@ -33,6 +33,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.PUT, ConsUtils.builderPath().build()).hasRole(ConsUtils.CLIENT);
                 auth.requestMatchers(HttpMethod.DELETE, ConsUtils.builderPath().withCartId().withArticles().withArticleId().build()).hasRole(ConsUtils.CLIENT);
+                auth.requestMatchers(HttpMethod.GET, ConsUtils.builderPath().withCartId().withArticles().build()).permitAll();
 
                 auth.anyRequest().denyAll();
             });

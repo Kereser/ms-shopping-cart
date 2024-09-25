@@ -2,6 +2,8 @@ package com.emazon.ms_shopping_cart.application.mapper;
 
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
 import com.emazon.ms_shopping_cart.application.dto.CartItemDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.CartPageDTO;
+import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.model.CartItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -27,4 +29,6 @@ public interface CartDTOMapper {
         itemsReqDTO.setItems(itemDTOList);
         return itemsReqDTO;
     }
+
+    CartPageDTO cartToCartPage(Cart cart);
 }

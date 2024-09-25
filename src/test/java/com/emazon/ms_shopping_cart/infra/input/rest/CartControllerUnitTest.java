@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -99,5 +100,15 @@ class CartControllerUnitTest {
     void Should_ThrowsException_When_NotParamsOnDeletion() throws Exception {
         mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_1))
                 .andExpect(status().isOk());
+    }
+
+    /*** Get all cart items ***/
+    @Test
+    void Should_ThrowsException_When_NotValidReqParam() throws Exception {
+        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1)
+                        .param(ConsUtils.DIRECTION_PARAM, ConsUtils.WRONG_SORT_PARAM))
+                .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.NOT_VALID_PARAM))
+                .andExpect(jsonPath(ConsUtils.FIELD_DIRECTION).value(ConsUtils.WRONG_SORT_PARAM))
+                .andExpect(status().isBadRequest());
     }
 }

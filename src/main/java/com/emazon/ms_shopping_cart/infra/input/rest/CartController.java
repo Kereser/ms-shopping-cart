@@ -2,7 +2,10 @@ package com.emazon.ms_shopping_cart.infra.input.rest;
 
 import com.emazon.ms_shopping_cart.ConsUtils;
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.ArticleResDTO;
+import com.emazon.ms_shopping_cart.application.dto.handlers.PageDTO;
 import com.emazon.ms_shopping_cart.application.handler.ICartHandler;
+import com.emazon.ms_shopping_cart.domain.model.SortOrder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,5 +29,15 @@ public class CartController {
     public ResponseEntity<Void> deleteItemFromCart(@PathVariable Long cartId, @PathVariable Long articleId) {
         cartHandler.handleDeletionFromCart(cartId, articleId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(ConsUtils.GET_ALL_ITEMS)
+    public ResponseEntity<PageDTO<ArticleResDTO>> getAllCartItems(
+            @RequestParam(defaultValue = "ASC") SortOrder direction,
+            @RequestParam(defaultValue = "20") Integer pageSize,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "name") String columns,
+            @PathVariable Long cartId) {
+        return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, columns, cartId));
     }
 }

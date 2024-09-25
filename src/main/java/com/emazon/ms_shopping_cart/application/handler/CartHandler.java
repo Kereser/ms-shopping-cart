@@ -1,6 +1,8 @@
 package com.emazon.ms_shopping_cart.application.handler;
 
 import com.emazon.ms_shopping_cart.application.dto.CartItemDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.ArticleResDTO;
+import com.emazon.ms_shopping_cart.application.dto.handlers.PageDTO;
 import com.emazon.ms_shopping_cart.application.mapper.CartDTOMapper;
 import com.emazon.ms_shopping_cart.domain.api.ICartServicePort;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
@@ -30,5 +32,10 @@ public class CartHandler implements ICartHandler {
     @Override
     public void handleDeletionFromCart(Long cartId, Long articleId) {
         cartServicePort.deleteArticleFromCart(cartId, articleId);
+    }
+
+    @Override
+    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId) {
+        return cartServicePort.getAllCartItems(direction, pageSize, page, columns, cartId);
     }
 }
