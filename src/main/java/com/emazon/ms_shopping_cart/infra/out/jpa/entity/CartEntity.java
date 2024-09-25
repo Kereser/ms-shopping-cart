@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +30,9 @@ public class CartEntity {
     @OneToMany(mappedBy = "cart", orphanRemoval = true, cascade = CascadeType.ALL)
     @Builder.Default
     private Set<CartItemEntity> cartItems = new HashSet<>();
+
+    @Column(nullable = ConsUtils.FALSE)
+    private BigDecimal totalPrice;
 
     @Column(nullable = ConsUtils.FALSE, updatable = false)
     @Builder.Default
