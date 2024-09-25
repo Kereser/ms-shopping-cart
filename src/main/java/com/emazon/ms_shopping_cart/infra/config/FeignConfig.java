@@ -17,10 +17,21 @@ public class FeignConfig {
 
     @Bean
     public RequestInterceptor requestInterceptor() {
-        return template -> template.header(ConsUtils.AUTHORIZATION, getTokenFromAuth());
+        return template -> {
+            String token = getTokenFromAuth();
+            if (token != null) {
+                template.header(ConsUtils.AUTHORIZATION, token);
+            }
+        };
     }
 
     private String getTokenFromAuth() {
-        return ConsUtils.BEARER + SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getCredentials() != null) {
+            return ConsUtils.BEARER + authentication.getCredentials();
+        }
+
+        return null;
     }
 }
