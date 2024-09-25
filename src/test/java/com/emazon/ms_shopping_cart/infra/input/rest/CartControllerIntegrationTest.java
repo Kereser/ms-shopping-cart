@@ -1,8 +1,9 @@
 package com.emazon.ms_shopping_cart.infra.input.rest;
 
 import com.emazon.ms_shopping_cart.ConsUtils;
-import com.emazon.ms_shopping_cart.application.dto.CartItemDTO;
+import com.emazon.ms_shopping_cart.TestCreationUtils;
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
+import com.emazon.ms_shopping_cart.application.dto.handlers.PageDTO;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
 import com.emazon.ms_shopping_cart.infra.exceptionhandler.ExceptionResponse;
@@ -22,10 +23,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,16 +51,11 @@ class CartControllerIntegrationTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @SpyBean
+    @MockBean
     private StockFeignPort stockFeignPort;
 
     @PersistenceContext
     private EntityManager entityManager;
-
-    private static final Set<CartItemDTO> cartItemsDTO = Set.of(CartItemDTO.builder().articleId(ConsUtils.LONG_1).quantity(ConsUtils.LONG_1).build());
-    private static final ItemsReqDTO itemsReqDTO = ItemsReqDTO.builder()
-            .items(new HashSet<>(cartItemsDTO))
-            .build();
 
     @Test
     void Should_ThrowsException_When_NotAuthorized() throws Exception {
@@ -81,9 +79,11 @@ class CartControllerIntegrationTest {
 
     @Test
     void Should_ThrowsException_When_NotAvailableConnectionToStock() throws Exception {
+        Mockito.doThrow(getFeignInternalError()).when(stockFeignPort).handleAdditionToCart(Mockito.any());
+
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(TestCreationUtils.getItemsReqDTO()))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isInternalServerError());
     }
@@ -95,7 +95,7 @@ class CartControllerIntegrationTest {
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(TestCreationUtils.getItemsReqDTO()))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isBadRequest());
     }
@@ -107,7 +107,7 @@ class CartControllerIntegrationTest {
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(TestCreationUtils.getItemsReqDTO()))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isConflict());
     }
@@ -119,7 +119,7 @@ class CartControllerIntegrationTest {
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(TestCreationUtils.getItemsReqDTO()))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isForbidden());
     }
@@ -131,7 +131,7 @@ class CartControllerIntegrationTest {
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(TestCreationUtils.getItemsReqDTO()))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getAuxDepotToken()))
                 .andExpect(status().isForbidden());
     }
@@ -147,18 +147,19 @@ class CartControllerIntegrationTest {
 
     @Test
     void Should_UpdateCart_When_ValidationsWentWell() throws Exception {
-        saveValidCart();
+        ItemsReqDTO dto = TestCreationUtils.getItemsReqDTO();
+        saveValidCart(dto);
 
         List<CartEntity> cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
         Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
         Assertions.assertEquals(ConsUtils.LONG_1, cartEntityList.get(0).getCartItems().stream().findFirst().map(CartItemEntity::getQuantity).orElse(ConsUtils.LONG_0));
 
-        itemsReqDTO.getItems().add(CartItemDTO.builder().articleId(ConsUtils.LONG_2).quantity(ConsUtils.LONG_1).build());
-        saveValidCart();
+        dto.addAll(Set.of(TestCreationUtils.getCartItemDTO()));
+        saveValidCart(dto);
 
         cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
         Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
-        Assertions.assertEquals(ConsUtils.LONG_2, cartEntityList.get(0).getCartItems().size());
+        Assertions.assertEquals(ConsUtils.LONG_2, cartEntityList.get(0).getCartItems().stream().findFirst().map(CartItemEntity::getQuantity).orElse(ConsUtils.LONG_0));
     }
 
     /*** Delete item from cart ***/
@@ -168,7 +169,7 @@ class CartControllerIntegrationTest {
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.ERROR_PROCESSING_OPERATION + Cart.class.getSimpleName()))
                 .andExpect(jsonPath(ConsUtils.FIELD_ERRORS_ID).value(ExceptionResponse.ID_NOT_FOUND))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -177,20 +178,24 @@ class CartControllerIntegrationTest {
 
         List<CartEntity> cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
         Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
-        Assertions.assertEquals(ConsUtils.LONG_1, cartEntityList.get(ConsUtils.INTEGER_0).getCartItems().stream().findFirst().map(CartItemEntity::getArticleId).orElse(ConsUtils.LONG_0));
+        Assertions.assertEquals(ConsUtils.LONG_1, cartEntityList.get(ConsUtils.INTEGER_0).getCartItems().size());
 
         mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_2)
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.ERROR_PROCESSING_OPERATION + ConsUtils.ARTICLE_ENTITY))
                 .andExpect(jsonPath(ConsUtils.FIELD_ERRORS_ID).value(ExceptionResponse.ID_NOT_FOUND))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void Should_DeleteItemFromCart_When_ValidData() throws Exception {
-        saveValidCart();
+        ItemsReqDTO dto = saveValidCart();
 
-        mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, ConsUtils.LONG_1)
+        Long articleId = dto.getItems().stream().findFirst().orElseThrow().getArticleId();
+        Mockito.doReturn(Set.of(TestCreationUtils.createArticlePriceDTO(articleId))).when(stockFeignPort).getArticlesPrice(Mockito.any());
+
+        mockMvc.perform(delete(ConsUtils.builderPath().withCartId().withArticles().withArticleId().build(), ConsUtils.LONG_1, articleId)
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isOk());
 
@@ -199,14 +204,43 @@ class CartControllerIntegrationTest {
         Assertions.assertEquals(ConsUtils.LONG_0, cartEntityList.get(ConsUtils.INTEGER_0).getCartItems().size());
     }
 
-    private void saveValidCart() throws Exception {
+    /*** Get all cart items ***/
+    @Test
+    void Should_ThrowsException_When_CartIdNotFoundOnGetItems() throws Exception {
+        saveValidCart();
+
+        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_2))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void Should_Get200_When_ValidPayload() throws Exception {
+        saveValidCart();
+
+        Mockito.doReturn(PageDTO.builder().content(List.of(TestCreationUtils.createArticleRes())).build()).when(stockFeignPort).getPageableArticles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1))
+                .andExpect(status().isOk());
+    }
+
+    private ItemsReqDTO saveValidCart(ItemsReqDTO dto) throws Exception {
         Mockito.doNothing().when(stockFeignPort).handleAdditionToCart(Mockito.any());
+
+        ItemsReqDTO itemsDTO = dto == null ? TestCreationUtils.getItemsReqDTO() : dto;
+        Mockito.doReturn(TestCreationUtils.createArticlePriceDTOFromCartItems(itemsDTO.getItems())).when(stockFeignPort).getArticlesPrice(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(itemsReqDTO))
+                        .content(mapper.writeValueAsString(itemsDTO))
                         .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isCreated());
+
+        return itemsDTO;
+    }
+
+    private ItemsReqDTO saveValidCart() throws Exception {
+        return saveValidCart(null);
     }
 
     private String getAuxDepotToken() {
@@ -242,6 +276,13 @@ class CartControllerIntegrationTest {
 
     private FeignException.Forbidden getFeignForbidden() throws JsonProcessingException {
         return new FeignException.Forbidden(null,
+                Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().build(), Map.of(), null, null, null),
+                mapper.writeValueAsBytes(ExceptionResponse.builder().build()),
+                null);
+    }
+
+    private FeignException.InternalServerError getFeignInternalError() throws JsonProcessingException {
+        return new FeignException.InternalServerError(null,
                 Request.create(Request.HttpMethod.PUT, ConsUtils.builderPath().build(), Map.of(), null, null, null),
                 mapper.writeValueAsBytes(ExceptionResponse.builder().build()),
                 null);
