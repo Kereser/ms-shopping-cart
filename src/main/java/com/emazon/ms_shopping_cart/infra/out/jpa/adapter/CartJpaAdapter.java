@@ -28,13 +28,22 @@ public class CartJpaAdapter implements ICartPersistencePort {
     public void save(Cart cart) {
         CartEntity entity = mapper.cartToCartEntity(cart);
 
+        operationsBeforeSave(entity);
+        repository.save(entity);
+    }
+
+    private void operationsBeforeSave(CartEntity entity) {
         entity.addCartItems(entity.getCartItems());
         entity.setUpdatedAt(LocalDateTime.now());
-        repository.save(entity);
     }
 
     @Override
     public CustomUserDetails getSecurityPrincipal() {
         return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    @Override
+    public Optional<Cart> findById(Long id) {
+        return repository.findById(id).map(mapper::cartEntityToCart);
     }
 }

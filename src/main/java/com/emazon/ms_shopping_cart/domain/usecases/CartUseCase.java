@@ -1,7 +1,12 @@
 package com.emazon.ms_shopping_cart.domain.usecases;
 
 import com.emazon.ms_shopping_cart.ConsUtils;
+import com.emazon.ms_shopping_cart.application.dto.handlers.PageDTO;
+import com.emazon.ms_shopping_cart.application.dto.input.ArticlesPriceDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.ArticleResDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.CartPageDTO;
 import com.emazon.ms_shopping_cart.application.mapper.CartDTOMapper;
+import com.emazon.ms_shopping_cart.application.utils.ParsingUtils;
 import com.emazon.ms_shopping_cart.domain.api.ICartServicePort;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.model.CartItem;
@@ -10,6 +15,7 @@ import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.emazon.ms_shopping_cart.infra.out.jpa.entity.CartEntity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,8 +56,37 @@ public class CartUseCase implements ICartServicePort {
         CartItem cartItemToRemove = findCartItemToDelete(cart.getCartItems(), articleId);
 
         removeCartItemFromCart(cart, cartItemToRemove);
+        updateTotalPriceOfCart(cart);
 
         save(cart);
+    }
+
+    private void updateTotalPriceOfCart(Cart cart) {
+        BigDecimal totalPrice = getTotalPriceFromArticles(getArticlesPriceDTO(cart.getCartItems()), cart.getCartItems());
+
+        cart.setTotalPrice(totalPrice);
+    }
+
+    private BigDecimal getTotalPriceFromArticles(Set<ArticlesPriceDTO> articlesPriceDTOS, Set<CartItem> cartItems) {
+        Map<Long, BigDecimal> mapArticlesToPrice = ParsingUtils.mapSetToMap(articlesPriceDTOS, ArticlesPriceDTO::getId, ArticlesPriceDTO::getPrice);
+
+        return doTotalPriceOperation(mapArticlesToPrice, cartItems);
+    }
+
+    private BigDecimal doTotalPriceOperation(Map<Long, BigDecimal> mapArticlesToPrice, Set<CartItem> cartItems) {
+        final BigDecimal[] totalPrice = {BigDecimal.ZERO};
+
+        cartItems.forEach(item -> totalPrice[0] = totalPrice[0].add(mapArticlesToPrice.get(item.getArticleId()).multiply(BigDecimal.valueOf(item.getQuantity()))));
+
+        return totalPrice[0];
+    }
+
+    private Set<ArticlesPriceDTO> getArticlesPriceDTO(Set<CartItem> cartItems) {
+        return stockFeignPort.getArticlesPrice(getArticleIdsStringFromCartItems(cartItems));
+    }
+
+    private String getArticleIdsStringFromCartItems(Set<CartItem> cartItems) {
+        return ParsingUtils.joinListElements(cartItems.stream().map(CartItem::getArticleId).toList());
     }
 
     @Override
@@ -70,8 +105,46 @@ public class CartUseCase implements ICartServicePort {
     private void handleNewCart(Cart cartReq) {
         stockFeignPort.handleAdditionToCart(mapper.cartItemsToItemsReqDTO(cartReq.getCartItems()));
 
+        updateTotalPriceOfCart(cartReq);
+
         cartReq.setCreatedAt(LocalDateTime.now());
         save(cartReq);
+    }
+
+    @Override
+    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId) {
+        String articleIds = ParsingUtils.joinListElements(getAllArticleIdsForCartId(cartId));
+
+        PageDTO<ArticleResDTO> articleRes = stockFeignPort.getPageableArticles(articleIds, direction, pageSize, page, columns);
+        return buildFinalPageDTO(articleRes, cartId);
+    }
+
+    private PageDTO<ArticleResDTO> buildFinalPageDTO(PageDTO<ArticleResDTO> articleRes, Long cartId) {
+        CartPageDTO cartPage = findCartPageById(cartId);
+
+        articleRes.setCart(cartPage);
+        return articleRes;
+    }
+
+    private CartPageDTO findCartPageById(Long cartId) {
+        return mapper.cartToCartPage(findById(cartId));
+    }
+
+    private List<Long> getAllArticleIdsForCartId(Long id) {
+        return mapToArticleIds(findById(id));
+    }
+
+    @Override
+    public Cart findById(Long id) {
+        Optional<Cart> optCart = cartPersistencePort.findById(id);
+
+        if (optCart.isEmpty()) throw new NoDataFoundException(Cart.class.getSimpleName(), CartEntity.Fields.id);
+
+        return optCart.get();
+    }
+
+    private List<Long> mapToArticleIds(Cart cart) {
+        return cart.getCartItems().stream().map(CartItem::getArticleId).toList();
     }
 
     private void handleUpdateCart(Cart cartReq, Cart dbCart) {
@@ -80,6 +153,8 @@ public class CartUseCase implements ICartServicePort {
         stockFeignPort.handleAdditionToCart(mapper.cartItemsToItemsReqDTO(tentativeItems));
 
         dbCart.addItems(tentativeItems);
+        updateTotalPriceOfCart(dbCart);
+
         save(dbCart);
     }
 
