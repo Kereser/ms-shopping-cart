@@ -17,4 +17,8 @@ public class ItemsReqDTO {
     @NotNull
     @Size(min = 1)
     private Set<@Valid CartItemDTO> items;
+
+    public void addAll(Set<CartItemDTO> items) {
+        this.items.addAll(items);
+    }
 }
