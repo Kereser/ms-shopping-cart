@@ -8,9 +8,18 @@ public class ConsUtils {
         return new PathBuilder();
     }
 
+    public static final String COMMA_DELIMITER = ",";
+    public static final String ASC = "ASC";
+    public static final String INTEGER_STR_0 = "0";
+    public static final String INTEGER_STR_20 = "20";
+
     public static final String ARTICLE_ENTITY = "Article";
     public static final String MS_STOCK = "MS-STOCK";
+    public static final String MS_TRANSACTIONS = "MS-TRANSACTIONS";
+    public static final String MS_REPORT = "MS-REPORT";
     public static final String MS_STOCK_URL = "${external.feign.url.ms-stock}";
+    public static final String MS_REPORT_URL = "${external.feign.url.ms-report}";
+    public static final String MS_TRANSACTIONS_URL = "${external.feign.url.ms-transactions}";
 
     public static final String CLIENT = "CLIENT";
     public static final String ADMIN = "ADMIN";
@@ -59,16 +68,27 @@ public class ConsUtils {
     public static final String GET_ALL_CARTS = "FROM cart";
 
     /*** Routes ***/
-    public static final String BASIC_URL = "/carts";
+    public static final String BASIC_URL = "/cart";
+    public static final String ALL_URL = "/all";
+    public static final String WITH_CHECKOUT_URL = "/checkout";
     public static final String WITH_CART_ID_URL = "/{cartId}";
     public static final String WITH_ARTICLE_ID_URL = "/{articleId}";
     public static final String WITH_ARTICLES_IDS_URL = "/{articleIds}";
     public static final String WITH_ARTICLES_URL = "/articles";
+    public static final String WITH_PURCHASE_URL = "/purchase";
+    public static final String WITH_SALES_URL = "/sales";
+    public static final String WITH_ROLLBACK_URL = "/rollback";
+
+    public static final String VALIDATE_STOCK_FOR_CART = BASIC_URL + WITH_ARTICLES_URL;
 
     public static final String DELETE_ITEM_ROUTE = WITH_CART_ID_URL + WITH_ARTICLES_URL + WITH_ARTICLE_ID_URL;
     public static final String GET_ALL_ITEMS = WITH_CART_ID_URL + WITH_ARTICLES_URL;
     public static final String GET_ALL_ITEMS_FROM_STOCK = BASIC_URL + WITH_ARTICLES_URL + WITH_ARTICLES_IDS_URL;
     public static final String GET_ITEMS_WITH_PRICE = WITH_ARTICLES_URL + WITH_ARTICLES_IDS_URL;
+
+    public static final String PROCESS_PURCHASE_ON_STOCK = BASIC_URL + WITH_ARTICLES_URL + WITH_PURCHASE_URL;
+    public static final String PROCESS_CART_ROLLBACK_URL = BASIC_URL + WITH_ARTICLES_URL + WITH_ROLLBACK_URL;
+    public static final String GET_ALL_ARTICLES_FROM_STOCK = WITH_ARTICLES_URL + ALL_URL;
 
     public static class PathBuilder {
         private final StringBuilder finalPath = new StringBuilder(BASIC_URL);
@@ -85,6 +105,11 @@ public class ConsUtils {
 
         public PathBuilder withArticles() {
             this.finalPath.append(WITH_ARTICLES_URL);
+            return this;
+        }
+
+        public PathBuilder withCheckout() {
+            this.finalPath.append(WITH_CHECKOUT_URL);
             return this;
         }
 
