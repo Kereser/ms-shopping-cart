@@ -10,4 +10,5 @@ public interface ICartServicePort {
     void deleteArticleFromCart(Long cartId, Long articleId);
     PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId);
     Cart findById(Long id);
+    void buyCart();
 }
