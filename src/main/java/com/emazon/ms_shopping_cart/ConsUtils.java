@@ -21,6 +21,9 @@ public class ConsUtils {
     public static final String MS_REPORT_URL = "${external.feign.url.ms-report}";
     public static final String MS_TRANSACTIONS_URL = "${external.feign.url.ms-transactions}";
 
+    public static final String JWT_KEY = "${security.jwt.key.private}";
+    public static final String JWT_USER = "${security.jwt.user.generator}";
+
     public static final String CLIENT = "CLIENT";
     public static final String ADMIN = "ADMIN";
     public static final String AUX_DEPOT = "AUX_DEPOT";
