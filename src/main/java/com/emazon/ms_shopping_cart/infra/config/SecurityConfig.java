@@ -32,8 +32,12 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.PUT, ConsUtils.builderPath().build()).hasRole(ConsUtils.CLIENT);
+
+                auth.requestMatchers(HttpMethod.POST, ConsUtils.builderPath().withCheckout().build()).hasRole(ConsUtils.CLIENT);
+
                 auth.requestMatchers(HttpMethod.DELETE, ConsUtils.builderPath().withCartId().withArticles().withArticleId().build()).hasRole(ConsUtils.CLIENT);
-                auth.requestMatchers(HttpMethod.GET, ConsUtils.builderPath().withCartId().withArticles().build()).permitAll();
+
+                auth.requestMatchers(HttpMethod.GET, ConsUtils.builderPath().withCartId().withArticles().build()).hasRole(ConsUtils.CLIENT);
 
                 auth.anyRequest().denyAll();
             });
