@@ -2,6 +2,7 @@ package com.emazon.ms_shopping_cart.infra.exceptionhandler;
 
 import com.emazon.ms_shopping_cart.infra.exception.BaseEntityException;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
+import com.emazon.ms_shopping_cart.infra.exception.PurchaseFailedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
@@ -53,6 +54,15 @@ public class ControllerAdvisor {
                 .fieldErrors(errors)
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+    }
+
+    @ExceptionHandler(PurchaseFailedException.class)
+    public ResponseEntity<ExceptionResponse> handlePurchaseExcepiton(BaseEntityException ex) {
+        ExceptionResponse res = ExceptionResponse.builder()
+                .message(String.format(ExceptionResponse.PURCHASE_FAILED_MSG, ex.getReason()))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(res);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
