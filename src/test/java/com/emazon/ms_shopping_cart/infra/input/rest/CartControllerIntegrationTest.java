@@ -79,7 +79,7 @@ class CartControllerIntegrationTest {
 
     @Test
     void Should_ThrowsException_When_NotAvailableConnectionToStock() throws Exception {
-        Mockito.doThrow(getFeignInternalError()).when(stockFeignPort).handleAdditionToCart(Mockito.any());
+        Mockito.doThrow(getFeignInternalError()).when(stockFeignPort).makeStockValidations(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,7 +91,7 @@ class CartControllerIntegrationTest {
     @Test
     void Should_ThrowsException_When_NotValidArticleId() throws Exception {
         Mockito.doThrow(getFeignBadRequest())
-                .when(stockFeignPort).handleAdditionToCart(Mockito.any());
+                .when(stockFeignPort).makeStockValidations(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,7 +103,7 @@ class CartControllerIntegrationTest {
     @Test
     void Should_ThrowsException_When_NotSufficientStock() throws Exception {
         Mockito.doThrow(getFeignConflicted())
-                .when(stockFeignPort).handleAdditionToCart(Mockito.any());
+                .when(stockFeignPort).makeStockValidations(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,7 +115,7 @@ class CartControllerIntegrationTest {
     @Test
     void Should_ThrowsException_When_ForbiddenAtFeign() throws Exception {
         Mockito.doThrow(getFeignForbidden())
-                .when(stockFeignPort).handleAdditionToCart(Mockito.any());
+                .when(stockFeignPort).makeStockValidations(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +127,7 @@ class CartControllerIntegrationTest {
     @Test
     void Should_ThrowsException_When_InvalidToken() throws Exception {
         Mockito.doThrow(getFeignForbidden())
-                .when(stockFeignPort).handleAdditionToCart(Mockito.any());
+                .when(stockFeignPort).makeStockValidations(Mockito.any());
 
         mockMvc.perform(put(ConsUtils.builderPath().build())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -209,7 +209,8 @@ class CartControllerIntegrationTest {
     void Should_ThrowsException_When_CartIdNotFoundOnGetItems() throws Exception {
         saveValidCart();
 
-        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_2))
+        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_2)
+                .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isNotFound());
     }
 
@@ -220,12 +221,13 @@ class CartControllerIntegrationTest {
 
         Mockito.doReturn(PageDTO.builder().content(List.of(TestCreationUtils.createArticleRes())).build()).when(stockFeignPort).getPageableArticles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1))
+        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1)
+                .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isOk());
     }
 
     private ItemsReqDTO saveValidCart(ItemsReqDTO dto) throws Exception {
-        Mockito.doNothing().when(stockFeignPort).handleAdditionToCart(Mockito.any());
+        Mockito.doNothing().when(stockFeignPort).makeStockValidations(Mockito.any());
 
         ItemsReqDTO itemsDTO = dto == null ? TestCreationUtils.getItemsReqDTO() : dto;
         Mockito.doReturn(TestCreationUtils.createArticlePriceDTOFromCartItems(itemsDTO.getItems())).when(stockFeignPort).getArticlesPrice(Mockito.any());
