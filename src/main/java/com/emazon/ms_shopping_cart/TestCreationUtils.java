@@ -8,6 +8,8 @@ import com.emazon.ms_shopping_cart.application.dto.out.BrandResDTO;
 import com.emazon.ms_shopping_cart.application.dto.out.CategoryArticleResDTO;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.model.CartItem;
+import com.emazon.ms_shopping_cart.infra.security.model.CustomUserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -108,5 +110,12 @@ public class TestCreationUtils {
         return ItemsReqDTO.builder()
                 .items(new HashSet<>(Set.of(getCartItemDTO())))
                 .build();
+    }
+
+    public static CustomUserDetails buildUserDetails() {
+        return new CustomUserDetails(ConsUtils.USERNAME,
+                ConsUtils.PASSWORD,
+                Set.of(new SimpleGrantedAuthority(ConsUtils.ROLE.concat(ConsUtils.CLIENT))),
+                defaultCounter);
     }
 }
