@@ -4,8 +4,13 @@ import com.emazon.ms_shopping_cart.ConsUtils;
 import com.emazon.ms_shopping_cart.TestCreationUtils;
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
 import com.emazon.ms_shopping_cart.application.dto.handlers.PageDTO;
+import com.emazon.ms_shopping_cart.application.dto.out.ArticleResDTO;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
+import com.emazon.ms_shopping_cart.domain.spi.ICartPersistencePort;
+import com.emazon.ms_shopping_cart.domain.spi.ReportFeignPort;
 import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
+import com.emazon.ms_shopping_cart.domain.spi.TransactionsFeignPort;
+import com.emazon.ms_shopping_cart.infra.exception.PurchaseFailedException;
 import com.emazon.ms_shopping_cart.infra.exceptionhandler.ExceptionResponse;
 import com.emazon.ms_shopping_cart.infra.out.jpa.entity.CartEntity;
 import com.emazon.ms_shopping_cart.infra.out.jpa.entity.CartItemEntity;
@@ -24,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -53,6 +60,15 @@ class CartControllerIntegrationTest {
 
     @MockBean
     private StockFeignPort stockFeignPort;
+
+    @MockBean
+    private ReportFeignPort reportFeignPort;
+
+    @MockBean
+    private TransactionsFeignPort transactionsFeignPort;
+
+    @SpyBean
+    private ICartPersistencePort cartPersistencePort;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -225,6 +241,37 @@ class CartControllerIntegrationTest {
                 .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isOk());
     }
+
+    /*** Buy cart ***/
+    @Test
+    void Should_ThrowsException_When_PurchaseFailed() throws Exception {
+        Cart cart = TestCreationUtils.createCart();
+        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findByUserId(Mockito.any());
+
+        ArticleResDTO articleResDTO = TestCreationUtils.createArticleRes(cart.getCartItems().stream().findFirst().orElseThrow().getArticleId());
+        Mockito.doReturn(List.of(articleResDTO)).when(stockFeignPort).getAllArticles(Mockito.any());
+
+        Mockito.doThrow(PurchaseFailedException.class).when(transactionsFeignPort).registerSale(Mockito.any());
+
+        mockMvc.perform(post(ConsUtils.builderPath().withCheckout().build())
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
+                .andExpect(status().isPaymentRequired())
+                .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(String.format(ExceptionResponse.PURCHASE_FAILED_MSG, cart.getUserId())));
+    }
+
+    @Test
+    void Should_BuyCart_When_ValidScenario() throws Exception {
+        Cart cart = TestCreationUtils.createCart();
+        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findByUserId(Mockito.any());
+
+        ArticleResDTO articleResDTO = TestCreationUtils.createArticleRes(cart.getCartItems().stream().findFirst().orElseThrow().getArticleId());
+        Mockito.doReturn(List.of(articleResDTO)).when(stockFeignPort).getAllArticles(Mockito.any());
+
+        mockMvc.perform(post(ConsUtils.builderPath().withCheckout().build())
+                        .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
+                .andExpect(status().isOk());
+    }
+
 
     private ItemsReqDTO saveValidCart(ItemsReqDTO dto) throws Exception {
         Mockito.doNothing().when(stockFeignPort).makeStockValidations(Mockito.any());

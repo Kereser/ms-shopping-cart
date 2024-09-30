@@ -55,8 +55,12 @@ public class TestCreationUtils {
     }
 
     public static ArticleResDTO createArticleRes() {
+        return createArticleRes(null);
+    }
+
+    public static ArticleResDTO createArticleRes(Long articleId) {
         return ArticleResDTO.builder()
-                .id(articleIdCounter++)
+                .id(articleId == null ? articleIdCounter++ : articleId)
                 .name(ARTICLE_NAME + articlePrefixCounter)
                 .description(ARTICLE_DESCRIPTION + articlePrefixCounter)
                 .price(BASIC_PRICE)
@@ -99,7 +103,7 @@ public class TestCreationUtils {
     }
 
     public static Cart createCart() {
-        return new Cart(cartIdCounter++, defaultCounter++, new HashSet<>(Set.of(createCartItem())), LocalDateTime.now(), LocalDateTime.now());
+        return new Cart(cartIdCounter++, defaultCounter++, new HashSet<>(Set.of(createCartItem())), BigDecimal.valueOf(500), LocalDateTime.now(), LocalDateTime.now());
     }
 
     public static CartItemDTO getCartItemDTO() {
