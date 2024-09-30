@@ -25,6 +25,15 @@ public class Cart {
         this.updatedAt = updatedAt;
     }
 
+    public Cart(Long id, Long userId, Set<CartItem> cartItems, BigDecimal totalPrice, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.cartItems = cartItems;
+        this.totalPrice = totalPrice;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() {
         return id;
     }
