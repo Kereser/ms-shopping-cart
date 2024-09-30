@@ -13,8 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class CartReportDTO {
     private Long cartId;
-    private Long clientId;
+    private Long userId;
     private BigDecimal totalPrice;
     private Set<ArticleResDTO> articles;
-    private LocalDateTime updatedAt;
+    private LocalDateTime cartLastUpdatedAt;
 }

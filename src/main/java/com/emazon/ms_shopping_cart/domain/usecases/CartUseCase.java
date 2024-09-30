@@ -69,8 +69,12 @@ public class CartUseCase implements ICartServicePort {
     }
 
     private void updateTotalPriceOfCart(Cart cart) {
-        BigDecimal totalPrice = getTotalPriceFromArticles(getArticlesPriceDTO(cart.getCartItems()), cart.getCartItems());
+        if (cart.getCartItems().isEmpty()) {
+            cart.setTotalPrice(BigDecimal.ZERO);
+            return;
+        }
 
+        BigDecimal totalPrice = getTotalPriceFromArticles(getArticlesPriceDTO(cart.getCartItems()), cart.getCartItems());
         cart.setTotalPrice(totalPrice);
     }
 
@@ -144,7 +148,7 @@ public class CartUseCase implements ICartServicePort {
     private PageDTO<ArticleResDTO> buildFinalPageDTO(PageDTO<ArticleResDTO> articleRes, Long cartId) {
         CartPageDTO cartPage = findCartPageById(cartId);
 
-        addCartQuantityToArticles(findCartByUserId(), articleRes.getContent());
+        addCartQuantityToArticles(findById(cartId), articleRes.getContent());
         articleRes.setCart(cartPage);
         return articleRes;
     }
@@ -185,8 +189,13 @@ public class CartUseCase implements ICartServicePort {
         processSaleTransaction(userCart);
         buildReport(userCart);
         deleteItemsFromCart(userCart);
+        restoreTotalPrice(userCart);
 
         save(userCart);
+    }
+
+    private void restoreTotalPrice(Cart userCart) {
+        userCart.setTotalPrice(BigDecimal.ZERO);
     }
 
     private void processReductionInStock(Cart userCart) {
@@ -236,8 +245,8 @@ public class CartUseCase implements ICartServicePort {
     private CartReportDTO buildCartReport(Cart userCart, List<ArticleResDTO> articles) {
         return CartReportDTO.builder()
                 .cartId(userCart.getId())
-                .clientId(userCart.getUserId())
-                .updatedAt(userCart.getUpdatedAt())
+                .userId(userCart.getUserId())
+                .cartLastUpdatedAt(userCart.getUpdatedAt())
                 .totalPrice(userCart.getTotalPrice())
                 .articles(new HashSet<>(articles))
                 .build();
