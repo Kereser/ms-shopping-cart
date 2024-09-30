@@ -26,12 +26,12 @@ public class JwtUtils {
 
     private static String userGenerator;
 
-    @Value("${security.jwt.key.private}")
+    @Value(ConsUtils.JWT_KEY)
     public void setKey(String key){
         JwtUtils.key = key;
     }
 
-    @Value("${security.jwt.user.generator}")
+    @Value(ConsUtils.JWT_USER)
     public void setUserGenerator(String name){
         JwtUtils.userGenerator = name;
     }
@@ -46,7 +46,7 @@ public class JwtUtils {
         String authorities = authentication.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(ConsUtils.COMMA_DELIMITER));
 
         return JWT.create()
                 .withIssuer(userGenerator)

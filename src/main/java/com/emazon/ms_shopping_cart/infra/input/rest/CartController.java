@@ -33,11 +33,17 @@ public class CartController {
 
     @GetMapping(ConsUtils.GET_ALL_ITEMS)
     public ResponseEntity<PageDTO<ArticleResDTO>> getAllCartItems(
-            @RequestParam(defaultValue = "ASC") SortOrder direction,
-            @RequestParam(defaultValue = "20") Integer pageSize,
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "name") String columns,
+            @RequestParam(defaultValue = ConsUtils.ASC) SortOrder direction,
+            @RequestParam(defaultValue = ConsUtils.INTEGER_STR_20) Integer pageSize,
+            @RequestParam(defaultValue = ConsUtils.INTEGER_STR_0) Integer page,
+            @RequestParam(defaultValue = ConsUtils.NAME) String columns,
             @PathVariable Long cartId) {
         return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, columns, cartId));
+    }
+
+    @PostMapping(ConsUtils.WITH_CHECKOUT_URL)
+    public ResponseEntity<Void> buyCart() {
+        cartHandler.buyCart();
+        return ResponseEntity.ok().build();
     }
 }

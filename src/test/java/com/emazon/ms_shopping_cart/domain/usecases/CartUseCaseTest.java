@@ -67,7 +67,7 @@ class CartUseCaseTest {
     }
 
     @Test
-    void Should_UpdateCart_When_ValidPayload() {
+    void Should_deleteItemsFromCart_When_ValidPayload() {
         Mockito.doReturn(USER_DETAILS_ID_1).when(cartPersistencePort).getSecurityPrincipal();
         Cart cart = TestCreationUtils.createCart();
         Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findByUserId(Mockito.any());
@@ -120,11 +120,12 @@ class CartUseCaseTest {
     }
 
     /*** Cart pageable ***/
-
     @Test
-    void Should_ThrowsException_When_NotValidSortParam() {
+    void Should_CorrectlyInteracts_When_GetAllCartItems() {
+        Mockito.doReturn(TestCreationUtils.buildUserDetails()).when(cartPersistencePort).getSecurityPrincipal();
         Cart cart = TestCreationUtils.createCart();
-        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findById(ConsUtils.LONG_1);
+        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findById(Mockito.any());
+        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findByUserId(Mockito.any());
         Mockito.doReturn(ARTICLE_RES_DTO_PAGE_DTO).when(stockFeignPort).getPageableArticles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doReturn(CART_PAGE_DTO).when(mapper).cartToCartPage(Mockito.any());
 

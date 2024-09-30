@@ -10,4 +10,5 @@ public interface ICartHandler {
     void handleAddOperation(Set<CartItemDTO> setDTO);
     void handleDeletionFromCart(Long cartId, Long articleId);
     PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId);
+    void buyCart();
 }
