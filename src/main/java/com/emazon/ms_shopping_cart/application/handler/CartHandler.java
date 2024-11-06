@@ -35,8 +35,8 @@ public class CartHandler implements ICartHandler {
     }
 
     @Override
-    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId) {
-        return cartServicePort.getAllCartItems(direction, pageSize, page, columns, cartId);
+    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns) {
+        return cartServicePort.getAllCartItems(direction, pageSize, page, columns);
     }
 
     @Override

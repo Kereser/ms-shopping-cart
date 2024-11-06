@@ -9,6 +9,8 @@ public class ConsUtils {
     }
 
     public static final String COMMA_DELIMITER = ",";
+    public static final String COLON_DELIMITER = ":";
+    public static final String EMPTY = "";
     public static final String ASC = "ASC";
     public static final String INTEGER_STR_0 = "0";
     public static final String INTEGER_STR_20 = "20";
@@ -81,11 +83,24 @@ public class ConsUtils {
     public static final String WITH_PURCHASE_URL = "/purchase";
     public static final String WITH_SALES_URL = "/sales";
     public static final String WITH_ROLLBACK_URL = "/rollback";
+    public static final String WITH_USER_URL = "/user";
+    public static final String FRONT_URL = "http://localhost:4200";
+    public static final String MATCH_ALL_URL = "/**";
+
+    /*** Methods ***/
+    public static final String GET = "GET";
+    public static final String POST = "POST";
+    public static final String PUT = "PUT";
+    public static final String DELETE = "DELETE";
+    public static final String REQUESTED_WITH = "X-Requested-With";
+    public static final String CONTENT_TYPE = "Content-Type";
+
+
 
     public static final String VALIDATE_STOCK_FOR_CART = BASIC_URL + WITH_ARTICLES_URL;
 
     public static final String DELETE_ITEM_ROUTE = WITH_CART_ID_URL + WITH_ARTICLES_URL + WITH_ARTICLE_ID_URL;
-    public static final String GET_ALL_ITEMS = WITH_CART_ID_URL + WITH_ARTICLES_URL;
+    public static final String GET_ALL_ITEMS_FOR_USER = WITH_USER_URL + WITH_ARTICLES_URL;
     public static final String GET_ALL_ITEMS_FROM_STOCK = BASIC_URL + WITH_ARTICLES_URL + WITH_ARTICLES_IDS_URL;
     public static final String GET_ITEMS_WITH_PRICE = WITH_ARTICLES_URL + WITH_ARTICLES_IDS_URL;
 
@@ -113,6 +128,11 @@ public class ConsUtils {
 
         public PathBuilder withCheckout() {
             this.finalPath.append(WITH_CHECKOUT_URL);
+            return this;
+        }
+
+        public PathBuilder withUser() {
+            this.finalPath.append(WITH_USER_URL);
             return this;
         }
 

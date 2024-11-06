@@ -1,5 +1,6 @@
 package com.emazon.ms_shopping_cart.infra.exceptionhandler;
 
+import com.emazon.ms_shopping_cart.ConsUtils;
 import com.emazon.ms_shopping_cart.infra.exception.BaseEntityException;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.emazon.ms_shopping_cart.infra.exception.PurchaseFailedException;
@@ -27,7 +28,7 @@ public class ControllerAdvisor {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ExceptionResponse> handleBadRequestOnConstrains(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ExceptionResponse.builder().message(ex.getMessage().split(":")[0]).build());
+                .body(ExceptionResponse.builder().message(ex.getMessage().split(ConsUtils.COLON_DELIMITER)[0]).build());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -69,7 +70,7 @@ public class ControllerAdvisor {
     public ResponseEntity<ExceptionResponse> handleNotValidReqParam(MethodArgumentTypeMismatchException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ExceptionResponse.builder()
                 .message(ExceptionResponse.NOT_VALID_PARAM)
-                .fieldErrors(Map.of(ex.getName(), ex.getValue() != null ? ex.getValue() : "")).build());
+                .fieldErrors(Map.of(ex.getName(), ex.getValue() != null ? ex.getValue() : ConsUtils.EMPTY)).build());
     }
 
     @ExceptionHandler(FeignException.BadRequest.class)
