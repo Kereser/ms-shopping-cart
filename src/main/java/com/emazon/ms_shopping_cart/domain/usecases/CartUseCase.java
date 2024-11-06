@@ -127,15 +127,15 @@ public class CartUseCase implements ICartServicePort {
     }
 
     @Override
-    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns, Long cartId) {
-        String articleIds = ParsingUtils.joinListElements(getAllArticleIdsForCartId(cartId));
+    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns) {
+        String articleIds = ParsingUtils.joinListElements(getAllArticleIdsForUserId());
 
         PageDTO<ArticleResDTO> articleRes = buildOrCreateArticlePageDTO(articleIds, direction, pageSize, page, columns);
-        return validRes(articleRes, cartId);
+        return validRes(articleRes);
     }
 
-    private PageDTO<ArticleResDTO> validRes(PageDTO<ArticleResDTO> articleRes, Long cartId) {
-        return articleRes == null ? null : buildFinalPageDTO(articleRes, cartId);
+    private PageDTO<ArticleResDTO> validRes(PageDTO<ArticleResDTO> articleRes) {
+        return articleRes == null ? null : buildFinalPageDTO(articleRes);
     }
 
     private PageDTO<ArticleResDTO> buildOrCreateArticlePageDTO(String articleIds, String direction, Integer pageSize, Integer page, String columns) {
@@ -145,10 +145,11 @@ public class CartUseCase implements ICartServicePort {
     }
 
 
-    private PageDTO<ArticleResDTO> buildFinalPageDTO(PageDTO<ArticleResDTO> articleRes, Long cartId) {
-        CartPageDTO cartPage = findCartPageById(cartId);
+    private PageDTO<ArticleResDTO> buildFinalPageDTO(PageDTO<ArticleResDTO> articleRes) {
+        Cart cart = findCartByUserId();
+        CartPageDTO cartPage = cartToCartPage(cart);
 
-        addCartQuantityToArticles(findById(cartId), articleRes.getContent());
+        addCartQuantityToArticles(cart, articleRes.getContent());
         articleRes.setCart(cartPage);
         return articleRes;
     }
@@ -163,21 +164,12 @@ public class CartUseCase implements ICartServicePort {
         articleRes.forEach(a -> a.setCartQuantity(articleQuantityMap.get(a.getId())));
     }
 
-    private CartPageDTO findCartPageById(Long cartId) {
-        return mapper.cartToCartPage(findById(cartId));
+    private CartPageDTO cartToCartPage(Cart cart) {
+        return mapper.cartToCartPage(cart);
     }
 
-    private List<Long> getAllArticleIdsForCartId(Long id) {
-        return mapToArticleIds(findById(id));
-    }
-
-    @Override
-    public Cart findById(Long id) {
-        Optional<Cart> optCart = cartPersistencePort.findById(id);
-
-        if (optCart.isEmpty()) throw new NoDataFoundException(Cart.class.getSimpleName(), CartEntity.Fields.id);
-
-        return optCart.get();
+    private List<Long> getAllArticleIdsForUserId() {
+        return mapToArticleIds(findCartByUserId());
     }
 
     @Override

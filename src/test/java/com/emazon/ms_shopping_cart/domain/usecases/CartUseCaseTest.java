@@ -11,6 +11,7 @@ import com.emazon.ms_shopping_cart.domain.spi.ICartPersistencePort;
 import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.emazon.ms_shopping_cart.infra.security.model.CustomUserDetails;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +52,9 @@ class CartUseCaseTest {
     private static final PageDTO<Object> ARTICLE_RES_DTO_PAGE_DTO = PageDTO.builder()
             .content(List.of(ArticleResDTO.builder().build()))
             .build();
+
+    @AfterEach
+    void tearDown() { Mockito.reset(cartPersistencePort); }
 
     @Test
     void Should_SaveNewCart_When_ValidPayload() {
@@ -124,25 +128,25 @@ class CartUseCaseTest {
     void Should_CorrectlyInteracts_When_GetAllCartItems() {
         Mockito.doReturn(TestCreationUtils.buildUserDetails()).when(cartPersistencePort).getSecurityPrincipal();
         Cart cart = TestCreationUtils.createCart();
-        Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findById(Mockito.any());
         Mockito.doReturn(Optional.of(cart)).when(cartPersistencePort).findByUserId(Mockito.any());
         Mockito.doReturn(ARTICLE_RES_DTO_PAGE_DTO).when(stockFeignPort).getPageableArticles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
         Mockito.doReturn(CART_PAGE_DTO).when(mapper).cartToCartPage(Mockito.any());
 
-        cartUseCase.getAllCartItems(Sort.Direction.ASC.name(), ConsUtils.INTEGER_20, ConsUtils.INTEGER_0, ConsUtils.NAME, ConsUtils.LONG_1);
+        cartUseCase.getAllCartItems(Sort.Direction.ASC.name(), ConsUtils.INTEGER_20, ConsUtils.INTEGER_0, ConsUtils.NAME);
 
-        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_2)).findById(Mockito.any());
+        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_2)).findByUserId(Mockito.any());
+        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_2)).getSecurityPrincipal();
         Mockito.verify(stockFeignPort, Mockito.times(ConsUtils.INTEGER_1)).getPageableArticles(Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any(),Mockito.any());
     }
 
     @Test
     void Should_ThrowsException_When_CartIdNotFoundOnGetAll() {
-        Mockito.doReturn(Optional.empty()).when(cartPersistencePort).findById(ConsUtils.LONG_1);
+        Mockito.reset(cartPersistencePort);
+        Mockito.doReturn(TestCreationUtils.buildUserDetails()).when(cartPersistencePort).getSecurityPrincipal();
+        Mockito.doReturn(Optional.empty()).when(cartPersistencePort).findByUserId(Mockito.any());
 
         String direction = Sort.Direction.ASC.name();
-        Assertions.assertThrows(NoDataFoundException.class, () -> cartUseCase.getAllCartItems(direction, ConsUtils.INTEGER_20, ConsUtils.INTEGER_0, ConsUtils.NAME, ConsUtils.LONG_1));
-
-        Mockito.verify(cartPersistencePort, Mockito.times(ConsUtils.INTEGER_1)).findById(Mockito.any());
+        Assertions.assertThrows(NoDataFoundException.class, () -> cartUseCase.getAllCartItems(direction, ConsUtils.INTEGER_20, ConsUtils.INTEGER_0, ConsUtils.NAME));
     }
 
     @Test

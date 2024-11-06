@@ -106,7 +106,7 @@ class CartControllerUnitTest {
     @Test
     @WithMockUser(roles = ConsUtils.CLIENT)
     void Should_ThrowsException_When_NotValidReqParam() throws Exception {
-        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1)
+        mockMvc.perform(get(ConsUtils.builderPath().withUser().withArticles().build())
                         .param(ConsUtils.DIRECTION_PARAM, ConsUtils.WRONG_SORT_PARAM))
                 .andExpect(jsonPath(ConsUtils.FIELD_MESSAGE).value(ExceptionResponse.NOT_VALID_PARAM))
                 .andExpect(jsonPath(ConsUtils.FIELD_DIRECTION).value(ConsUtils.WRONG_SORT_PARAM))
