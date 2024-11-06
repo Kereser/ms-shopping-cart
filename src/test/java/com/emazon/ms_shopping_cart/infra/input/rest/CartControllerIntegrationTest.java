@@ -237,7 +237,7 @@ class CartControllerIntegrationTest {
 
         Mockito.doReturn(PageDTO.builder().content(List.of(TestCreationUtils.createArticleRes())).build()).when(stockFeignPort).getPageableArticles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockMvc.perform(get(ConsUtils.builderPath().withCartId().withArticles().build(), ConsUtils.LONG_1)
+        mockMvc.perform(get(ConsUtils.builderPath().withUser().withArticles().build(), ConsUtils.LONG_1)
                 .header(ConsUtils.AUTHORIZATION, ConsUtils.BEARER + getClientToken()))
                 .andExpect(status().isOk());
     }
@@ -304,7 +304,7 @@ class CartControllerIntegrationTest {
     private String getClientToken() {
         CustomUserDetails userDetail = new CustomUserDetails(ConsUtils.USERNAME,
                 ConsUtils.PASSWORD,
-                Set.of(new SimpleGrantedAuthority("ROLE_".concat(ConsUtils.CLIENT))),
+                Set.of(new SimpleGrantedAuthority(ConsUtils.ROLE.concat(ConsUtils.CLIENT))),
                 ConsUtils.LONG_1);
         return JwtUtils.createToken(new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities()));
     }

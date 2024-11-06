@@ -31,14 +31,13 @@ public class CartController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(ConsUtils.GET_ALL_ITEMS)
+    @GetMapping(ConsUtils.GET_ALL_ITEMS_FOR_USER)
     public ResponseEntity<PageDTO<ArticleResDTO>> getAllCartItems(
             @RequestParam(defaultValue = ConsUtils.ASC) SortOrder direction,
             @RequestParam(defaultValue = ConsUtils.INTEGER_STR_20) Integer pageSize,
             @RequestParam(defaultValue = ConsUtils.INTEGER_STR_0) Integer page,
-            @RequestParam(defaultValue = ConsUtils.NAME) String columns,
-            @PathVariable Long cartId) {
-        return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, columns, cartId));
+            @RequestParam(defaultValue = ConsUtils.NAME) String columns) {
+        return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, columns));
     }
 
     @PostMapping(ConsUtils.WITH_CHECKOUT_URL)
