@@ -15,35 +15,30 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartJpaAdapter implements ICartPersistencePort {
 
-    private final CartJpaRepository repository;
-    private final CartEntityMapper mapper;
+  private final CartJpaRepository repository;
+  private final CartEntityMapper mapper;
 
-    @Override
-    public Optional<Cart> findByUserId(Long userId) {
-        Optional<CartEntity> opt = repository.findByUserId(userId);
-        return opt.map(mapper::cartEntityToCart);
-    }
+  @Override
+  public Optional<Cart> findByUserId(Long userId) {
+    Optional<CartEntity> opt = repository.findByUserId(userId);
+    return opt.map(mapper::cartEntityToCart);
+  }
 
-    @Override
-    public void save(Cart cart) {
-        CartEntity entity = mapper.cartToCartEntity(cart);
+  @Override
+  public void save(Cart cart) {
+    CartEntity entity = mapper.cartToCartEntity(cart);
 
-        operationsBeforeSave(entity);
-        repository.save(entity);
-    }
+    operationsBeforeSave(entity);
+    repository.save(entity);
+  }
 
-    private void operationsBeforeSave(CartEntity entity) {
-        entity.addCartItems(entity.getCartItems());
-        entity.setUpdatedAt(LocalDateTime.now());
-    }
+  private void operationsBeforeSave(CartEntity entity) {
+    entity.addCartItems(entity.getCartItems());
+    entity.setUpdatedAt(LocalDateTime.now());
+  }
 
-    @Override
-    public CustomUserDetails getSecurityPrincipal() {
-        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
-
-    @Override
-    public Optional<Cart> findById(Long id) {
-        return repository.findById(id).map(mapper::cartEntityToCart);
-    }
+  @Override
+  public CustomUserDetails getSecurityPrincipal() {
+    return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+  }
 }
