@@ -9,6 +9,6 @@ import java.util.Set;
 public interface ICartHandler {
     void handleAddOperation(Set<CartItemDTO> setDTO);
     void handleDeletionFromCart(Long cartId, Long articleId);
-    PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns);
+    PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String categoryName, String brandName);
     void buyCart();
 }
