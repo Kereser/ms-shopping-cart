@@ -127,10 +127,10 @@ public class CartUseCase implements ICartServicePort {
     }
 
     @Override
-    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns) {
+    public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String categoryName, String brandName) {
         String articleIds = ParsingUtils.joinListElements(getAllArticleIdsForUserId());
 
-        PageDTO<ArticleResDTO> articleRes = buildOrCreateArticlePageDTO(articleIds, direction, pageSize, page, columns);
+        PageDTO<ArticleResDTO> articleRes = buildOrCreateArticlePageDTO(articleIds, direction, pageSize, page, categoryName, brandName);
         return validRes(articleRes);
     }
 
@@ -138,10 +138,10 @@ public class CartUseCase implements ICartServicePort {
         return articleRes == null ? null : buildFinalPageDTO(articleRes);
     }
 
-    private PageDTO<ArticleResDTO> buildOrCreateArticlePageDTO(String articleIds, String direction, Integer pageSize, Integer page, String columns) {
+    private PageDTO<ArticleResDTO> buildOrCreateArticlePageDTO(String articleIds, String direction, Integer pageSize, Integer page, String categoryName, String brandName) {
         if (articleIds.isEmpty()) return null;
 
-        return stockFeignPort.getPageableArticles(articleIds, direction, pageSize, page, columns);
+        return stockFeignPort.getPageableArticles(articleIds, direction, pageSize, page, categoryName, brandName);
     }
 
 
@@ -169,7 +169,7 @@ public class CartUseCase implements ICartServicePort {
     }
 
     private List<Long> getAllArticleIdsForUserId() {
-        return mapToArticleIds(findCartByUserId());
+        return mapCartToArticleIds(findCartByUserId());
     }
 
     @Override
@@ -252,7 +252,7 @@ public class CartUseCase implements ICartServicePort {
         stockFeignPort.makeStockValidations(buildItemsReqDTO(userCart));
     }
 
-    private List<Long> mapToArticleIds(Cart cart) {
+    private List<Long> mapCartToArticleIds(Cart cart) {
         return cart.getCartItems().stream().map(CartItem::getArticleId).toList();
     }
 
