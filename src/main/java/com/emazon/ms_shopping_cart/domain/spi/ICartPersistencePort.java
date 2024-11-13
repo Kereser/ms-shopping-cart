@@ -6,8 +6,9 @@ import com.emazon.ms_shopping_cart.infra.security.model.CustomUserDetails;
 import java.util.Optional;
 
 public interface ICartPersistencePort {
-    Optional<Cart> findByUserId(Long userId);
-    void save(Cart cart);
-    CustomUserDetails getSecurityPrincipal();
-    Optional<Cart> findById(Long id);
+  Optional<Cart> findByUserId(Long userId);
+
+  void save(Cart cart);
+
+  CustomUserDetails getSecurityPrincipal();
 }

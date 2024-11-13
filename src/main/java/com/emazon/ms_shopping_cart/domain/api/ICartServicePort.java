@@ -8,6 +8,6 @@ public interface ICartServicePort {
     void handleAddOperation(Cart dto);
     void save(Cart cart);
     void deleteArticleFromCart(Long cartId, Long articleId);
-    PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String columns);
+    PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String categoryName, String brandName);
     void buyCart();
 }

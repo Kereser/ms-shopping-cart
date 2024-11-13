@@ -36,8 +36,9 @@ public class CartController {
             @RequestParam(defaultValue = ConsUtils.ASC) SortOrder direction,
             @RequestParam(defaultValue = ConsUtils.INTEGER_STR_20) Integer pageSize,
             @RequestParam(defaultValue = ConsUtils.INTEGER_STR_0) Integer page,
-            @RequestParam(defaultValue = ConsUtils.NAME) String columns) {
-        return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, columns));
+            @RequestParam(defaultValue = ConsUtils.EMPTY) String categoryName,
+            @RequestParam(defaultValue = ConsUtils.EMPTY) String brandName) {
+        return ResponseEntity.ok().body(cartHandler.getAllCartItems(direction.name(), pageSize, page, categoryName, brandName));
     }
 
     @PostMapping(ConsUtils.WITH_CHECKOUT_URL)
