@@ -168,7 +168,8 @@ class CartControllerIntegrationTest {
 
     cartEntityList = entityManager.createQuery(ConsUtils.GET_ALL_CARTS, CartEntity.class).getResultList();
     Assertions.assertEquals(ConsUtils.INTEGER_1, cartEntityList.size());
-    Assertions.assertEquals(ConsUtils.LONG_2, cartEntityList.get(0).getCartItems().stream().findFirst().map(CartItemEntity::getQuantity).orElse(ConsUtils.LONG_0));
+    // Quantity as zero if cartQuantity is grater than stored quantity
+    Assertions.assertEquals(ConsUtils.LONG_0, cartEntityList.get(0).getCartItems().stream().findFirst().map(CartItemEntity::getQuantity).orElse(ConsUtils.LONG_2));
   }
 
   /*** Delete item from cart ***/
