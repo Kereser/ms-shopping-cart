@@ -27,42 +27,43 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+  private final CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomJWTEntryPoint jwtEntryPoint) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(apiConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(authenticationEntryPoint))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(HttpMethod.PUT, ConsUtils.builderPath().build()).hasRole(ConsUtils.CLIENT);
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomJWTEntryPoint jwtEntryPoint) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(apiConfigurationSource()))
+        .csrf(AbstractHttpConfigurer::disable)
+        .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(authenticationEntryPoint))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> {
+          auth.requestMatchers(HttpMethod.PUT, ConsUtils.builderPath().build()).hasRole(ConsUtils.CLIENT);
 
-                auth.requestMatchers(HttpMethod.POST, ConsUtils.builderPath().withCheckout().build()).hasRole(ConsUtils.CLIENT);
+          auth.requestMatchers(HttpMethod.POST, ConsUtils.builderPath().withCheckout().build()).hasRole(ConsUtils.CLIENT);
 
-                auth.requestMatchers(HttpMethod.DELETE, ConsUtils.builderPath().withCartId().withArticles().withArticleId().build()).hasRole(ConsUtils.CLIENT);
+          auth.requestMatchers(HttpMethod.DELETE, ConsUtils.builderPath().withCartId().withArticles().withArticleId().build()).hasRole(ConsUtils.CLIENT);
 
-                auth.requestMatchers(HttpMethod.GET, ConsUtils.builderPath().withCartId().withArticles().build()).hasRole(ConsUtils.CLIENT);
+          auth.requestMatchers(HttpMethod.GET, ConsUtils.builderPath().withCartId().withArticles().build()).hasRole(ConsUtils.CLIENT);
+          auth.requestMatchers(ConsUtils.SWAGGER_URL, ConsUtils.SWAGGER_DOCS_URL).permitAll();
 
-                auth.anyRequest().denyAll();
-            });
+          auth.anyRequest().denyAll();
+        });
 
-        http.anonymous(AbstractHttpConfigurer::disable);
-        http.addFilterBefore(new JwtValidatorFilter(jwtEntryPoint), BasicAuthenticationFilter.class);
+    http.anonymous(AbstractHttpConfigurer::disable);
+    http.addFilterBefore(new JwtValidatorFilter(jwtEntryPoint), BasicAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+  }
 
-    CorsConfigurationSource apiConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(ConsUtils.FRONT_URL));
-        configuration.setAllowedMethods(List.of(ConsUtils.GET, ConsUtils.POST, ConsUtils.PUT, ConsUtils.DELETE));
-        configuration.setAllowedHeaders(List.of(ConsUtils.AUTHORIZATION, ConsUtils.CONTENT_TYPE, ConsUtils.REQUESTED_WITH));
-        configuration.setExposedHeaders(List.of(ConsUtils.AUTHORIZATION));
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration(ConsUtils.MATCH_ALL_URL, configuration);
-        return source;
-    }
+  CorsConfigurationSource apiConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(List.of(ConsUtils.FRONT_URL));
+    configuration.setAllowedMethods(List.of(ConsUtils.GET, ConsUtils.POST, ConsUtils.PUT, ConsUtils.DELETE));
+    configuration.setAllowedHeaders(List.of(ConsUtils.AUTHORIZATION, ConsUtils.CONTENT_TYPE, ConsUtils.REQUESTED_WITH));
+    configuration.setExposedHeaders(List.of(ConsUtils.AUTHORIZATION));
+    configuration.setAllowCredentials(true);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration(ConsUtils.MATCH_ALL_URL, configuration);
+    return source;
+  }
 }
