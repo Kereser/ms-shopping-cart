@@ -11,9 +11,9 @@ import com.emazon.ms_shopping_cart.domain.api.ICartServicePort;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.model.CartItem;
 import com.emazon.ms_shopping_cart.domain.spi.ICartPersistencePort;
-import com.emazon.ms_shopping_cart.domain.spi.ReportFeignPort;
-import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
-import com.emazon.ms_shopping_cart.domain.spi.TransactionsFeignPort;
+import com.emazon.ms_shopping_cart.infra.feign.ReportFeignPort;
+import com.emazon.ms_shopping_cart.infra.feign.StockFeignPort;
+import com.emazon.ms_shopping_cart.infra.feign.TransactionsFeignPort;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.emazon.ms_shopping_cart.infra.exception.PurchaseFailedException;
 import com.emazon.ms_shopping_cart.infra.out.jpa.entity.CartEntity;
@@ -31,7 +31,12 @@ public class CartUseCase implements ICartServicePort {
   private final ReportFeignPort reportFeignPort;
   private final CartDTOMapper mapper;
 
-  public CartUseCase(ICartPersistencePort cartPersistencePort, StockFeignPort stockFeignPort, TransactionsFeignPort transactionsFeignPort, ReportFeignPort reportFeignPort, CartDTOMapper mapper) {
+  public CartUseCase(
+      ICartPersistencePort cartPersistencePort,
+      StockFeignPort stockFeignPort,
+      TransactionsFeignPort transactionsFeignPort,
+      ReportFeignPort reportFeignPort,
+      CartDTOMapper mapper) {
     this.cartPersistencePort = cartPersistencePort;
     this.stockFeignPort = stockFeignPort;
     this.transactionsFeignPort = transactionsFeignPort;
@@ -84,13 +89,16 @@ public class CartUseCase implements ICartServicePort {
   }
 
   private BigDecimal getTotalPriceFromArticles(Set<ArticlesPriceDTO> filteredArticlesPriceDTO, Set<CartItem> filteredCartItems) {
-    Map<Long, BigDecimal> mapArticlesToPrice = ParsingUtils.mapSetToMap(filteredArticlesPriceDTO, ArticlesPriceDTO::getId, ArticlesPriceDTO::getPrice);
+    Map<Long, BigDecimal> mapArticlesToPrice = ParsingUtils.mapSetToMap(filteredArticlesPriceDTO,
+        ArticlesPriceDTO::getId, ArticlesPriceDTO::getPrice);
 
     return doTotalPriceOperation(mapArticlesToPrice, filteredCartItems);
   }
 
   private Set<CartItem> reduceCartItemsQuantityIfApplies(Set<ArticlesPriceDTO> articlesPriceDTOS, Set<CartItem> cartItems) {
-    Map<Long, Long> articleIdToQuantityMap = ParsingUtils.mapSetToMap(articlesPriceDTOS, ArticlesPriceDTO::getId, ArticlesPriceDTO::getQuantity);
+    Map<Long, Long> articleIdToQuantityMap = ParsingUtils.mapSetToMap(articlesPriceDTOS,
+        ArticlesPriceDTO::getId,
+        ArticlesPriceDTO::getQuantity);
 
     cartItems.forEach(ci -> {
       // reduce quantity
@@ -103,6 +111,7 @@ public class CartUseCase implements ICartServicePort {
   }
 
   private BigDecimal doTotalPriceOperation(Map<Long, BigDecimal> articlesIdToPriceMap, Set<CartItem> cartItems) {
+
     final BigDecimal[] totalPrice = {BigDecimal.ZERO};
 
     cartItems.forEach(item -> totalPrice[0] = totalPrice[0].add(articlesIdToPriceMap.getOrDefault(item.getArticleId(), BigDecimal.ZERO)
@@ -146,10 +155,21 @@ public class CartUseCase implements ICartServicePort {
   }
 
   @Override
-  public PageDTO<ArticleResDTO> getAllCartItems(String direction, Integer pageSize, Integer page, String categoryName, String brandName) {
+  public PageDTO<ArticleResDTO> getAllCartItems(
+      String direction,
+      Integer pageSize,
+      Integer page,
+      String categoryName,
+      String brandName) {
     String articleIds = ParsingUtils.joinListElements(getAllArticleIdsForUserId());
 
-    PageDTO<ArticleResDTO> articleRes = buildOrCreateArticlePageDTO(articleIds, direction, pageSize, page, categoryName, brandName);
+    PageDTO<ArticleResDTO> articleRes = buildOrCreateArticlePageDTO(
+        articleIds,
+        direction,
+        pageSize,
+        page,
+        categoryName,
+        brandName);
     return validRes(articleRes);
   }
 
@@ -157,8 +177,15 @@ public class CartUseCase implements ICartServicePort {
     return articleRes == null ? null : buildFinalPageDTO(articleRes);
   }
 
-  private PageDTO<ArticleResDTO> buildOrCreateArticlePageDTO(String articleIds, String direction, Integer pageSize, Integer page, String categoryName, String brandName) {
-    if (articleIds.isEmpty()) return null;
+  private PageDTO<ArticleResDTO> buildOrCreateArticlePageDTO(
+      String articleIds,
+      String direction,
+      Integer pageSize,
+      Integer page,
+      String categoryName,
+      String brandName) {
+    if (articleIds.isEmpty())
+      return null;
 
     return stockFeignPort.getPageableArticles(articleIds, direction, pageSize, page, categoryName, brandName);
   }

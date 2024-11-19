@@ -8,7 +8,7 @@ import com.emazon.ms_shopping_cart.application.dto.out.CartPageDTO;
 import com.emazon.ms_shopping_cart.application.mapper.CartDTOMapper;
 import com.emazon.ms_shopping_cart.domain.model.Cart;
 import com.emazon.ms_shopping_cart.domain.spi.ICartPersistencePort;
-import com.emazon.ms_shopping_cart.domain.spi.StockFeignPort;
+import com.emazon.ms_shopping_cart.infra.feign.StockFeignPort;
 import com.emazon.ms_shopping_cart.infra.exception.NoDataFoundException;
 import com.emazon.ms_shopping_cart.infra.security.model.CustomUserDetails;
 import org.junit.jupiter.api.AfterEach;
