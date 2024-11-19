@@ -1,4 +1,4 @@
-package com.emazon.ms_shopping_cart.domain.spi;
+package com.emazon.ms_shopping_cart.infra.feign;
 
 import com.emazon.ms_shopping_cart.ConsUtils;
 import com.emazon.ms_shopping_cart.application.dto.ItemsReqDTO;
